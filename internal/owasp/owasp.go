@@ -44,7 +44,7 @@ var skipDir = map[string]bool{
 	"__pycache__": true, "dist": true, "build": true,
 	// Labeled fixtures are scored by go test, not by repo-wide gate (dogfood).
 	"testdata": true,
-	// Python virtualenvs are not the customer's code (Satokori 2026-08-21).
+	// Python virtualenvs are not the customer's code.
 	"venv": true, ".venv": true, "site-packages": true,
 }
 

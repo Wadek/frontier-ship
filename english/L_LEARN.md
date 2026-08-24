@@ -34,4 +34,4 @@ Ingest and classify a **single project** before changing it. Learn is the first 
 
 - Read-only: Learn does not move/delete files.
 - **Security belongs in Guard** — secret surfaces (`.env`, keys, …) are not part of Learn.
-- Run **per project** (e.g. each child of `D:\wakalabs`), not on the umbrella alone.
+- Run **per project**, not on an umbrella folder of many apps.

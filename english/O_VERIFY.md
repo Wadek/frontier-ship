@@ -64,7 +64,7 @@ Full index and template: **[`stacks/README.md`](stacks/README.md)**.
 
 | Stack | Playbook |
 |-------|----------|
-| Python + static UI | [`stacks/python-web-static.md`](stacks/python-web-static.md) (from **tasks**) |
+| Python + static UI | [`stacks/python-web-static.md`](stacks/python-web-static.md) |
 | Go HTTP | [`stacks/go-http.md`](stacks/go-http.md) (stub) |
 | Node Express + SPA | [`stacks/node-express.md`](stacks/node-express.md) (stub) |
 

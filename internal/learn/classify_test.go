@@ -8,7 +8,7 @@ import (
 
 func TestClassifyAppCompose(t *testing.T) {
 	dir := t.TempDir()
-	_ = os.WriteFile(filepath.Join(dir, "docker-compose.yml"), []byte("services:\n  tasks:\n    image: x\n"), 0o644)
+	_ = os.WriteFile(filepath.Join(dir, "docker-compose.yml"), []byte("services:\n  web:\n    image: x\n"), 0o644)
 	_ = os.Mkdir(filepath.Join(dir, "ui"), 0o755)
 	_ = os.Mkdir(filepath.Join(dir, "data"), 0o755)
 	_ = os.WriteFile(filepath.Join(dir, "ui", "server.py"), []byte("print(1)\n"), 0o644)

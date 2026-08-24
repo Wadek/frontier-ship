@@ -7,16 +7,16 @@ Each playbook answers: *how do we run that standard on **this** stack?*
 
 ## When to add a playbook
 
-After the first successful Opt cycle on a new stack (like `tasks` for Python + static UI), write or extend a playbook so the next similar repo does not re-learn from scratch.
+After the first successful Opt cycle on a new stack, write or extend a playbook so the next similar repo does not re-learn from scratch.
 
 ## Index
 
-| Playbook | Matches (Learn hints) | Reference customer |
-|----------|------------------------|--------------------|
-| [python-web-static.md](python-web-static.md) | `app_compose`, Python HTTP + static HTML/JS | `github.com/Wadek/tasks`, Satokori |
-| [habitat-edge.md](habitat-edge.md) | cloudflared + `waka-net` public hostnames | Pigeon / Satokori / wakalabs edge |
-| [go-http.md](go-http.md) | Go `net/http` / chi / echo APIs | *(stub — fill on first Go Opt)* |
-| [node-express.md](node-express.md) | Node Express/Fastify + SPA | *(stub — fill on first Node Opt)* |
+| Playbook | Matches (Learn hints) |
+|----------|------------------------|
+| [python-web-static.md](python-web-static.md) | `app_compose`, Python HTTP + static HTML/JS |
+| [habitat-edge.md](habitat-edge.md) | cloudflared + a private Docker network + public hostnames |
+| [go-http.md](go-http.md) | Go `net/http` / chi / echo APIs *(stub — fill on first Go Opt)* |
+| [node-express.md](node-express.md) | Node Express/Fastify + SPA *(stub — fill on first Node Opt)* |
 
 ## Playbook template (copy for a new stack)
 
