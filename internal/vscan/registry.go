@@ -7,7 +7,8 @@ func Registry() []Scanner {
 	return []Scanner{
 		OWASPScanner{},
 		CheckovScanner{},
-		stubScanner{name: "gitleaks", why: "planned adapter - secrets (use when wired)"},
+		GitleaksScanner{},
+		TrivyScanner{},
 		stubScanner{name: "semgrep", why: "planned adapter - broad SAST (use when wired)"},
 	}
 }
@@ -26,7 +27,7 @@ type stubScanner struct {
 	name, why string
 }
 
-func (s stubScanner) Name() string   { return s.name }
+func (s stubScanner) Name() string    { return s.name }
 func (s stubScanner) Available() bool { return false }
 func (s stubScanner) Builtin() bool   { return false }
 func (s stubScanner) Scan(root string) (Result, error) {

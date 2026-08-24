@@ -17,6 +17,7 @@ import (
 	"github.com/Wadek/frontier-ship/internal/optimize"
 	"github.com/Wadek/frontier-ship/internal/owasp"
 	"github.com/Wadek/frontier-ship/internal/policy"
+	fruntime "github.com/Wadek/frontier-ship/internal/runtime"
 	"github.com/Wadek/frontier-ship/internal/vscan"
 )
 
@@ -172,6 +173,7 @@ func handleMeta(args []string) {
   frontier learn        L   — Learn / Landscape (classify before change)
   frontier guard        G   — Guard / security exam (OWASP + secret surfaces)
   frontier hygiene      H   — Hygiene / AI provenance (watermarks-remover)
+  frontier runtime      R   — Runtime / probe + bounded chaos (allowlist)
   frontier slim         S   — Slim / vibe-bloat (PLANNED — not enforced)
   frontier optimize     O   — Optimize report (behavior-preserving speed; advise)
 
@@ -180,6 +182,7 @@ func handleMeta(args []string) {
   git frontier learn classify [path]
   git frontier guard list|checkov
   git frontier hygiene inspect|status|clean PATH
+  git frontier runtime status|scan|chaos|budget
   git frontier optimize report|status|pr-body Opt-001
   git frontier enhance guard|optimize
   git frontier enhance status|seal
@@ -197,7 +200,7 @@ Env: FRONTIER_SOFT=1  FRONTIER_VERBOSE=1  FRONTIER_GIT_BIN  FRONTIER_LEDGER
 
 Nothing remote goes if plan/apply fails (like terraform).
 
-Same as standalone:  frontier scm | learn | guard | hygiene | slim | optimize | plan | apply
+Same as standalone:  frontier scm | learn | guard | hygiene | runtime | slim | optimize | plan | apply
 (Not \"go frontier\" — go is the Go toolchain)`)
 		return
 	}
@@ -234,6 +237,8 @@ Same as standalone:  frontier scm | learn | guard | hygiene | slim | optimize | 
 		runOptimize(cwd, args[1:])
 	case "hygiene", "watermarks", "watermark", "marks", "H", "h":
 		runHygiene(cwd, args[1:])
+	case "runtime", "probe", "chaos", "R", "r":
+		runRuntime(cwd, args[1:])
 	case "plan":
 		runPlan(cwd, true)
 	case "apply", "gate":
@@ -271,6 +276,7 @@ Policy families (word = primary, letter = alias):
   Learn     (L)  — ingest + classify before change
   Guard     (G)  — security + secret surfaces; enforced at changeset
   Hygiene   (H)  — AI provenance (watermarks-remover); advise
+  Runtime   (R)  — post-ship probe + bounded chaos (allowlist)
   Slim      (S)  — vibe-code bloat; PLANNED
   Optimize  (O)  — behavior-preserving speed; report + small PRs
 
@@ -470,6 +476,164 @@ func runHygieneClean(cwd, path string, inPlace bool) {
 func inspectHygieneQuiet(cwd string) *hygiene.Report {
 	targets := hygieneTargets(cwd, nil)
 	return hygiene.InspectFiles(hygiene.ServiceURL(), cwd, targets)
+}
+
+func printRuntimeStub() {
+	fmt.Println(`╔══════════════════════════════════════════════╗
+║  Runtime (R) — probe + bounded chaos         ║
+╚══════════════════════════════════════════════╝
+  Word:    frontier runtime   aliases: probe, chaos, R
+  Docs:    english/R_RUNTIME.md
+
+  frontier runtime              # status
+  frontier runtime scan         # GET allowlisted loopback URLs
+  frontier runtime chaos        # dry-run inject plan (v1 does not inject)
+  frontier runtime budget       # seal token-share reservation
+
+  Allowlist: FRONTIER_RUNTIME_ALLOWLIST  (default D:\frontier\runtime\allowlist.json)
+  Token %:   FRONTIER_RUNTIME_TOKEN_PCT  (default 5)
+  Inject:    FRONTIER_RUNTIME_CHAOS=1    (still dry in v1 — no network mutate)
+  v1 HTTP targets: 127.0.0.1 / localhost only.
+╚══════════════════════════════════════════════╝`)
+}
+
+func runRuntime(cwd string, args []string) {
+	sub := "status"
+	if len(args) > 0 {
+		switch strings.ToLower(args[0]) {
+		case "help", "-h", "--help":
+			printRuntimeStub()
+			return
+		case "status", "scan", "chaos", "budget":
+			sub = strings.ToLower(args[0])
+		default:
+			fmt.Fprintf(os.Stderr, "unknown runtime subcommand %q (try: status|scan|chaos|budget)\n", args[0])
+			os.Exit(2)
+		}
+	}
+	switch sub {
+	case "scan":
+		runRuntimeScan(cwd)
+	case "chaos":
+		runRuntimeChaos(cwd)
+	case "budget":
+		runRuntimeBudget(cwd)
+	default:
+		runRuntimeStatus(cwd)
+	}
+}
+
+func runRuntimeStatus(cwd string) {
+	fmt.Println(`╔══════════════════════════════════════════════╗
+║  RUNTIME (R) — status                        ║
+╚══════════════════════════════════════════════╝`)
+	path := fruntime.AllowlistPath()
+	fmt.Printf("allowlist: %s\n", path)
+	al, err := fruntime.LoadAllowlist(path)
+	if err != nil {
+		fmt.Printf("loaded:    no\nerror:     %s\n", err)
+		fmt.Println("create an allowlist before scan/chaos. See english/R_RUNTIME.md")
+		return
+	}
+	fmt.Printf("loaded:    yes\ntargets:   %d\ntoken_pct: %d\nchaos.on:  %v  max_s=%d\ninject:    %v (env)\n",
+		len(al.Targets), fruntime.TokenPct(al), al.Chaos.Enabled, al.Chaos.MaxDurationS, fruntime.ChaosInjectFlag())
+	for _, t := range al.Targets {
+		fmt.Printf("  - %s  kind=%s  url=%s  net=%s\n", t.Name, t.Kind, t.URL, t.Net)
+	}
+	led, err := ledger.Open(findLedger(cwd))
+	if err == nil {
+		_, _ = led.Append("frontier-git", "runtime.status", map[string]any{
+			"allowlist": path, "targets": len(al.Targets), "token_pct": fruntime.TokenPct(al),
+		})
+	}
+}
+
+func runRuntimeScan(cwd string) {
+	fmt.Println(`╔══════════════════════════════════════════════╗
+║  RUNTIME (R) — scan                          ║
+╚══════════════════════════════════════════════╝`)
+	axiom("F0", "runtime.scan", "allowlisted loopback only")
+	al, err := fruntime.LoadAllowlist(fruntime.AllowlistPath())
+	if err != nil {
+		fail(err)
+		return
+	}
+	probes := fruntime.ScanHTTP(al)
+	if len(probes) == 0 {
+		fmt.Println("no http targets in allowlist")
+	}
+	for _, p := range probes {
+		if p.Err != "" {
+			fmt.Printf("  FAIL %s  %s  %s\n", p.Name, p.URL, p.Err)
+			continue
+		}
+		fmt.Printf("  %d   %s  %s\n", p.Status, p.Name, p.URL)
+	}
+	led, err := ledger.Open(findLedger(cwd))
+	if err == nil {
+		_, _ = led.Append("frontier-git", "runtime.scan", map[string]any{
+			"n": len(probes), "allowlist": al.Path,
+		})
+		axiom("F0", "ledger.append", "runtime.scan sealed")
+	}
+}
+
+func runRuntimeChaos(cwd string) {
+	fmt.Println(`╔══════════════════════════════════════════════╗
+║  RUNTIME (R) — chaos                         ║
+╚══════════════════════════════════════════════╝`)
+	al, err := fruntime.LoadAllowlist(fruntime.AllowlistPath())
+	if err != nil {
+		fail(err)
+		return
+	}
+	plan := fruntime.PlanChaos(al, fruntime.ChaosInjectFlag())
+	fmt.Printf("would_inject: %v\n", plan.WouldInject)
+	if plan.Denied != "" {
+		fmt.Printf("denied:       %s\n", plan.Denied)
+	}
+	fmt.Printf("duration_s:   %d\nsteps:\n", plan.DurationS)
+	for _, s := range plan.Steps {
+		fmt.Printf("  - %s\n", s)
+	}
+	action := "runtime.chaos_dry"
+	if plan.WouldInject {
+		action = "runtime.chaos_denied"
+		fmt.Println("v1 does not inject. Plan is sealed; a later runner may execute under the same allowlist.")
+	}
+	if plan.Denied != "" && !plan.WouldInject {
+		action = "runtime.chaos_dry"
+	}
+	led, err := ledger.Open(findLedger(cwd))
+	if err == nil {
+		_, _ = led.Append("frontier-git", action, map[string]any{
+			"denied": plan.Denied, "steps": plan.Steps, "duration_s": plan.DurationS,
+		})
+		axiom("F0", "ledger.append", action+" sealed")
+	}
+}
+
+func runRuntimeBudget(cwd string) {
+	fmt.Println(`╔══════════════════════════════════════════════╗
+║  RUNTIME (R) — token budget reservation      ║
+╚══════════════════════════════════════════════╝`)
+	axiom("F0", "runtime.budget", "reserve a share before any model job")
+	path := fruntime.AllowlistPath()
+	al, err := fruntime.LoadAllowlist(path)
+	if err != nil {
+		fail(err)
+		return
+	}
+	pct := fruntime.TokenPct(al)
+	fmt.Printf("allowlist: %s\nreserve:   %d%% of operator token budget\n", path, pct)
+	fmt.Println("v1 records the reservation. A container runner must not exceed this share.")
+	led, err := ledger.Open(findLedger(cwd))
+	if err == nil {
+		_, _ = led.Append("frontier-git", "runtime.budget", map[string]any{
+			"token_pct": pct, "allowlist": path, "targets": len(al.Targets),
+		})
+		axiom("F0", "ledger.append", "runtime.budget sealed")
+	}
 }
 
 func runOptimize(cwd string, args []string) {
@@ -884,9 +1048,10 @@ func runEnhanceGuard(cwd string) {
 ╚══════════════════════════════════════════════╝`)
 	axiom("F0", "enhance.start", "build pack without tokens; hand residual to host model")
 	opts := vscan.Options{}
-	// Explicit adapters on enhance: checkov when available (still programmatic).
-	if s, ok := vscan.Lookup("checkov"); ok && s.Available() {
-		opts.Adapters = []string{"checkov"}
+	for _, name := range []string{"checkov", "gitleaks", "trivy"} {
+		if s, ok := vscan.Lookup(name); ok && s.Available() {
+			opts.Adapters = append(opts.Adapters, name)
+		}
 	}
 	pack, err := vscan.BuildPack(cwd, opts)
 	if err != nil {

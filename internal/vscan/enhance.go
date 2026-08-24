@@ -38,18 +38,18 @@ func WriteEnhanceBrief(root string, p *Pack) (*EnhanceArtifacts, error) {
 		return nil, err
 	}
 	js, _ := json.MarshalIndent(struct {
-		Stamp       string         `json:"stamp"`
-		Disposition string         `json:"disposition"`
-		BySource    map[string]int `json:"by_source"`
-		FindingsN   int            `json:"findings_n"`
-		Findings    []Finding      `json:"findings_capped"`
-		ScopeMode   string         `json:"scope_mode"`
-		Paths       []string       `json:"changed_paths"`
-		Manifests   []string       `json:"manifests"`
-		LangCounts  map[string]int `json:"lang_counts"`
-		AdaptersRun []string       `json:"adapters_run"`
+		Stamp        string            `json:"stamp"`
+		Disposition  string            `json:"disposition"`
+		BySource     map[string]int    `json:"by_source"`
+		FindingsN    int               `json:"findings_n"`
+		Findings     []Finding         `json:"findings_capped"`
+		ScopeMode    string            `json:"scope_mode"`
+		Paths        []string          `json:"changed_paths"`
+		Manifests    []string          `json:"manifests"`
+		LangCounts   map[string]int    `json:"lang_counts"`
+		AdaptersRun  []string          `json:"adapters_run"`
 		AdaptersSkip map[string]string `json:"adapters_skip"`
-		Budget      map[string]int `json:"token_budget"`
+		Budget       map[string]int    `json:"token_budget"`
 	}{
 		Stamp: stamp, Disposition: p.Disposition, BySource: p.BySource,
 		FindingsN: len(p.Findings), Findings: p.FindingsCapped,
@@ -159,7 +159,10 @@ func residualGaps(p *Pack) []string {
 		gaps = append(gaps, "IaC: Checkov not run - review Terraform/K8s/Dockerfile manually or install checkov.")
 	}
 	if !ran["gitleaks"] {
-		gaps = append(gaps, "Secrets beyond PEM/AKIA patterns: consider gitleaks when adapter lands (or run it yourself).")
+		gaps = append(gaps, "Secrets beyond PEM/AKIA patterns: install gitleaks or run frontier guard gitleaks.")
+	}
+	if !ran["trivy"] {
+		gaps = append(gaps, "Dependency/config CVEs: install trivy or run frontier guard trivy.")
 	}
 	if !ran["semgrep"] {
 		gaps = append(gaps, "Broader SAST dataflow: semgrep/CodeQL outside Frontier until adapter exists.")
@@ -189,11 +192,11 @@ func trimSnippet(s string) string {
 
 // SealPayload is what the host agent writes for enhance seal.
 type SealPayload struct {
-	Summary            string           `json:"summary"`
-	Findings           []Finding        `json:"findings"`
-	DispositionSuggest string           `json:"disposition_suggest"`
-	ToolsUsed          []string         `json:"tools_used"`
-	ResidualRisk       string           `json:"residual_risk"`
+	Summary            string    `json:"summary"`
+	Findings           []Finding `json:"findings"`
+	DispositionSuggest string    `json:"disposition_suggest"`
+	ToolsUsed          []string  `json:"tools_used"`
+	ResidualRisk       string    `json:"residual_risk"`
 }
 
 // ReadSealFile loads an enhance seal JSON.

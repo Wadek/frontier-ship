@@ -24,7 +24,7 @@ CLI: **`frontier guard`** (letter alias **`G`**). Formal definition-set in axiom
 |-------|------|---------|
 | Built-in OWASP v0 | `internal/owasp` regex ScanTree | no |
 | Secret surfaces | path names only (`.env`, `.pem`, credentials…) | no |
-| Adapters | Checkov (if installed); gitleaks/semgrep planned | no |
+| Adapters | Checkov / Gitleaks / Trivy if on PATH; semgrep planned | no |
 | Scope + inventory | git diff vs main, lang/manifest counts | no |
 | Enhance brief | `.frontier/enhance/V-*.md` capped (~12 KiB) | handoff only |
 
@@ -39,6 +39,8 @@ Gate/plan still **hard-block only** on built-in OWASP High/Critical. Adapter + e
 | `frontier guard` / `G` / `exam` | OWASP exam + secret surfaces; seal `exam.owasp` |
 | `frontier guard list` | Built-in + adapters |
 | `frontier guard checkov` | Checkov adapter if on PATH |
+| `frontier guard gitleaks` | Gitleaks adapter if on PATH |
+| `frontier guard trivy` | Trivy fs adapter if on PATH |
 | `frontier enhance guard` | Programmatic pack + lean brief |
 | `frontier enhance seal PATH` | Host result → `enhance.completed` (advise) |
 | `frontier gate` | Exam + push rules + seal pass/fail |
@@ -53,4 +55,4 @@ Gate/plan still **hard-block only** on built-in OWASP High/Critical. Adapter + e
 
 ## Stick with Guard + Learn
 
-Slim (`frontier slim` / `S`) is planned. Learn (`frontier learn` / `L`) first.
+Slim (`frontier slim` / `S`) is planned. Runtime (`frontier runtime` / `R`) is post-ship, not a push gate. Learn (`frontier learn` / `L`) first.
