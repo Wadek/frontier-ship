@@ -10,6 +10,16 @@ import (
 	"testing"
 )
 
+func TestReportTokensCapOff(t *testing.T) {
+	t.Setenv("FRONTIER_RUNTIME_TOKEN_CAP", "")
+	t.Setenv("FRONTIER_RUNTIME_TOKEN_PCT", "")
+	al := &Allowlist{TokenPct: 5}
+	r := ReportTokens(al, 0)
+	if r.CapEnabled || r.ConfiguredPct != 5 || r.ConsumedPct != 0 || r.RemainingPct != 5 {
+		t.Fatalf("%+v", r)
+	}
+}
+
 func TestLoopbackHTTP(t *testing.T) {
 	if !LoopbackHTTP("http://127.0.0.1:8765/health") || LoopbackHTTP("https://example.com/x") || LoopbackHTTP("http://0.0.0.0:80/") {
 		t.Fatal("loopback filter")

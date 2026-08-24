@@ -488,7 +488,7 @@ func printRuntimeStub() {
   frontier runtime              # status
   frontier runtime scan         # GET allowlisted loopback URLs
   frontier runtime chaos        # dry-run inject plan (v1 does not inject)
-  frontier runtime budget       # seal token-share reservation
+  frontier runtime budget       # report configured vs consumed token %
 
   Allowlist: FRONTIER_RUNTIME_ALLOWLIST  (default D:\frontier\runtime\allowlist.json)
   Token %:   FRONTIER_RUNTIME_TOKEN_PCT  (default 5)
@@ -535,8 +535,11 @@ func runRuntimeStatus(cwd string) {
 		fmt.Println("create an allowlist before scan/chaos. See english/R_RUNTIME.md")
 		return
 	}
-	fmt.Printf("loaded:    yes\ntargets:   %d\ntoken_pct: %d\nchaos.on:  %v  max_s=%d\ninject:    %v (env)\n",
-		len(al.Targets), fruntime.TokenPct(al), al.Chaos.Enabled, al.Chaos.MaxDurationS, fruntime.ChaosInjectFlag())
+	tr := fruntime.ReportTokens(al, 0)
+	fmt.Printf("loaded:    yes\ntargets:   %d\nchaos.on:  %v  max_s=%d\ninject:    %v (env)\n",
+		len(al.Targets), al.Chaos.Enabled, al.Chaos.MaxDurationS, fruntime.ChaosInjectFlag())
+	fmt.Printf("tokens:    configured=%d%%  consumed=%.1f%%  remaining=%.1f%%  cap=%v\n",
+		tr.ConfiguredPct, tr.ConsumedPct, tr.RemainingPct, tr.CapEnabled)
 	for _, t := range al.Targets {
 		fmt.Printf("  - %s  kind=%s  url=%s  net=%s\n", t.Name, t.Kind, t.URL, t.Net)
 	}
@@ -615,24 +618,30 @@ func runRuntimeChaos(cwd string) {
 
 func runRuntimeBudget(cwd string) {
 	fmt.Println(`╔══════════════════════════════════════════════╗
-║  RUNTIME (R) — token budget reservation      ║
+║  RUNTIME (R) — token consumption report      ║
 ╚══════════════════════════════════════════════╝`)
-	axiom("F0", "runtime.budget", "reserve a share before any model job")
+	axiom("F0", "runtime.tokens", "report configured vs consumed share (cap off by default)")
 	path := fruntime.AllowlistPath()
 	al, err := fruntime.LoadAllowlist(path)
 	if err != nil {
 		fail(err)
 		return
 	}
-	pct := fruntime.TokenPct(al)
-	fmt.Printf("allowlist: %s\nreserve:   %d%% of operator token budget\n", path, pct)
-	fmt.Println("v1 records the reservation. A container runner must not exceed this share.")
+	tr := fruntime.ReportTokens(al, 0)
+	fmt.Printf("allowlist:     %s\n", path)
+	fmt.Printf("configured:    %d%%\nconsumed:      %.1f%%\nremaining:     %.1f%%\ncap_enabled:   %v\n",
+		tr.ConfiguredPct, tr.ConsumedPct, tr.RemainingPct, tr.CapEnabled)
+	fmt.Println(tr.Note)
 	led, err := ledger.Open(findLedger(cwd))
 	if err == nil {
-		_, _ = led.Append("frontier-git", "runtime.budget", map[string]any{
-			"token_pct": pct, "allowlist": path, "targets": len(al.Targets),
+		_, _ = led.Append("frontier-git", "runtime.tokens", map[string]any{
+			"configured_pct": tr.ConfiguredPct,
+			"consumed_pct":   tr.ConsumedPct,
+			"remaining_pct":  tr.RemainingPct,
+			"cap_enabled":    tr.CapEnabled,
+			"allowlist":      path,
 		})
-		axiom("F0", "ledger.append", "runtime.budget sealed")
+		axiom("F0", "ledger.append", "runtime.tokens sealed")
 	}
 }
 

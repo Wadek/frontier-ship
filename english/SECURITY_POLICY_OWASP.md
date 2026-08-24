@@ -27,8 +27,10 @@ Applies to the **union of lines in the proposed change** (`C`), at maximum / at 
 | A09 | Logging/Monitoring Failures | Do not log raw passwords or `Authorization:` headers | `owasp.a09.sensitive_log` |
 | A10 | SSRF | Do not fetch user-controlled URLs with open redirects to metadata IPs without allowlist comments | `owasp.a10.open_url_fetch` |
 
-Severity defaults: **High** for A02/A03/A07/A08 hits; **Medium** otherwise.  
-Untriaged High/Critical under `V` blocks the gate (F4).
+v0 is **one fast regex per Top 10 class** (2021), not a “Top 100.” There is no OWASP Top 100; depth lives in ASVS / CWE and in **adapters** (Checkov, Gitleaks, Trivy) that run after the regex pass.
+
+Severity in Go today: **Critical** A02; **High** A01/A03/A07/A08; **Medium** A04/A05/A06/A09/A10.  
+Untriaged **built-in** High/Critical under `V` blocks plan/apply (F4). Adapter Critical is **advise** until promoted into this chain.
 
 ## Translation chain
 

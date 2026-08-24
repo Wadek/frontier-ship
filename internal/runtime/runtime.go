@@ -69,6 +69,45 @@ func TokenPct(al *Allowlist) int {
 	return DefaultTokenPct
 }
 
+// TokenCapEnabled is off unless FRONTIER_RUNTIME_TOKEN_CAP=1.
+// The percentage logic stays; v1 only reports consumption.
+func TokenCapEnabled() bool {
+	v := os.Getenv("FRONTIER_RUNTIME_TOKEN_CAP")
+	return v == "1" || strings.EqualFold(v, "true")
+}
+
+// TokenReport is a snapshot of intended share vs consumed share.
+type TokenReport struct {
+	CapEnabled    bool    `json:"cap_enabled"`
+	ConfiguredPct int     `json:"configured_pct"`
+	ConsumedPct   float64 `json:"consumed_pct"`
+	RemainingPct  float64 `json:"remaining_pct"`
+	Note          string  `json:"note"`
+}
+
+// ReportTokens builds the report. ConsumedPct is 0 until a boxed job records spend.
+func ReportTokens(al *Allowlist, consumedPct float64) TokenReport {
+	cfg := TokenPct(al)
+	if consumedPct < 0 {
+		consumedPct = 0
+	}
+	rem := float64(cfg) - consumedPct
+	if rem < 0 {
+		rem = 0
+	}
+	note := "reporting only — cap is off. A later runner records spend here."
+	if TokenCapEnabled() {
+		note = "cap ON — jobs must stay at or under configured_pct"
+	}
+	return TokenReport{
+		CapEnabled:    TokenCapEnabled(),
+		ConfiguredPct: cfg,
+		ConsumedPct:   consumedPct,
+		RemainingPct:  rem,
+		Note:          note,
+	}
+}
+
 func ChaosInjectFlag() bool {
 	v := os.Getenv("FRONTIER_RUNTIME_CHAOS")
 	return v == "1" || strings.EqualFold(v, "true")

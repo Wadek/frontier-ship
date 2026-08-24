@@ -18,19 +18,18 @@ Those write-ups assume Kubernetes + a public cloud account. Frontier does not. S
 
 Do **not** put Trivy image rebuilds, DAST, or chaos on `git push`. Push stays cheap: OWASP + (optional) adapter advise.
 
-## Token budget (AI in containers)
+## Token share (AI in containers)
 
-Runtime may spend a **declared share** of the operator’s model budget on a boxed job against allowlisted targets — not the whole session.
+Runtime **reports** an intended token share vs what boxed jobs have consumed. Enforcement is **off** unless `FRONTIER_RUNTIME_TOKEN_CAP=1`.
 
 | Knob | Default | Meaning |
 |------|---------|---------|
-| `FRONTIER_RUNTIME_TOKEN_PCT` | `5` | Percent of the operator budget this job may use |
+| `token_pct` in allowlist / `FRONTIER_RUNTIME_TOKEN_PCT` | `5` | Intended share, for reporting |
+| `FRONTIER_RUNTIME_TOKEN_CAP` | unset (off) | Set `1` later to refuse jobs over the share |
 | `FRONTIER_RUNTIME_ALLOWLIST` | `D:\frontier\runtime\allowlist.json` | Only these URLs / docker networks |
 | `FRONTIER_RUNTIME_CHAOS` | unset | Must be `1` to inject; otherwise dry-run |
 
-The job **reserves** the share in the ledger (`runtime.budget`) before any model call. If the allowlist is missing or empty, Runtime **refuses**. Containers are the isolation boundary (read-only root, loopback or named habitat network, no WAN unless the allowlist says so — and v1 allowlist **rejects** non-loopback hosts).
-
-v1 does not auto-launch a model container. It records the reservation and the target list so a later runner can execute under that cap. Spending tokens without a reservation is a process break.
+`frontier runtime budget` prints configured / consumed / remaining percentages and seals `runtime.tokens`. Consumed stays 0 until a runner records spend. Allowlist missing still refuses **scan/chaos**; it does not refuse because of tokens.
 
 ## Allowlist (fail closed)
 
@@ -62,7 +61,7 @@ Rules:
 | `frontier runtime` / `status` | Show allowlist path, budget %, chaos flag |
 | `frontier runtime scan` | HTTP GET allowlisted loopback URLs; optional Trivy if asked later |
 | `frontier runtime chaos` | Dry-run the inject plan; inject only with the env flag |
-| `frontier runtime budget` | Seal `runtime.budget` for a token-capped job |
+| `frontier runtime budget` | Report configured vs consumed token % |
 
 ## What we are not copying
 
