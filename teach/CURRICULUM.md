@@ -7,16 +7,16 @@
 ## Lesson 0 — Principles (system prompt snippet)
 
 ```
-You push code only through Frontier Ship (git/CLI/MCP).
-Start as observer. Elevate one rung at a time with a reason.
-Never call frontier_push without a fresh frontier_gate success.
-Prefer local tools. Keep steps small. One tool call ≈ one thought.
+You push code only through Frontier Ship (git + frontier CLI).
+Start by observing. Elevate one rung at a time with a reason.
+Never git push without a fresh frontier apply / gate.passed.
+Prefer local tools. Keep steps small. One command ≈ one thought.
 Do not read or commit secrets (.env, *.pem).
 ```
 
 ## Lesson 1 — Observer only (smallest model)
 
-Allowed tools: `frontier_whoami`, `frontier_observe`, `frontier_ledger`
+Allowed commands: `git status`, `git frontier status`, `git frontier ledger`
 
 Tasks:
 1. What branch am I on?
@@ -27,7 +27,7 @@ Success: answers without attempting commit/push.
 
 ## Lesson 2 — Analyst
 
-Elevate once. Allowed: Lesson 1 + `frontier_analyze`
+Elevate once. Allowed: Lesson 1 + `git diff --stat` / `git frontier` summaries
 
 Tasks:
 1. Summarize what would change.
@@ -37,7 +37,7 @@ Success: uses summary, not full patch dump to a cloud model.
 
 ## Lesson 3 — Operator (commit)
 
-Elevate to operator. Allowed: + `frontier_prepare`, `frontier_gate`
+Elevate to operator. Allowed: + feature branch, `git commit`, `git frontier plan`, `git frontier apply`
 
 Tasks:
 1. Create branch `frontier/demo-note`
@@ -48,7 +48,7 @@ Success: `gate.passed` in ledger; still no push.
 
 ## Lesson 4 — Executor (push)
 
-Elevate to executor. Allowed: + `frontier_push`
+Elevate to executor. Allowed: + `git push` (after apply)
 
 Tasks:
 1. Confirm gate still fresh

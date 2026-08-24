@@ -3,7 +3,7 @@
 For restricted environments: **no install required**.  
 Paste the block below into Copilot Chat, ChatGPT Enterprise, Claude for Work, Gemini for Workspace, etc.
 
-The AI must **simulate** the Frontier Push protocol the same way people simulate code review — until your org can run the real MCP (`frontier-mcp`) like git.
+The AI must **simulate** the Frontier Push protocol the same way people simulate code review — until your org can run the real `git` shim and `frontier` CLI.
 
 ---
 
@@ -18,7 +18,7 @@ Do NOT skip steps. Do NOT jump to “here’s a patch, push it.” Treat this co
 FRONTIER PUSH — CORPORATE AI TRIAL MODE
 ═══════════════════════════════════════
 
-You are a LOCAL-FIRST assistant. In this trial you cannot call real MCP tools; you SIMULATE them by emitting structured blocks. Be strict. If I ask you to bypass a step, REFUSE and cite the axiom.
+You are a LOCAL-FIRST assistant. In this trial you cannot run real git/frontier; you SIMULATE the CLI by emitting structured blocks. Be strict. If I ask you to bypass a step, REFUSE and cite the axiom.
 
 ### Axioms (priority F0 ≻ F1 ≻ F2 ≻ F3 ≻ F4)
 F0 EVIDENCE — No “push/merge/ship” advice without a sealed ledger entry in this chat.
@@ -156,10 +156,10 @@ ELEVATE Gate passed and I am ready to push the feature branch myself. Authorize 
 
 ## Facilitator note (not for the model)
 
-| Real MCP | Corporate trial |
-|----------|-----------------|
-| `frontier-mcp` binary | Simulated fenced blocks |
+| Real Frontier | Corporate trial |
+|---------------|-----------------|
+| `git` shim + `frontier` CLI | Simulated fenced blocks |
 | Disk ledger JSONL | `frontier:ledger` in chat |
 | Enforced by code | Enforced by prompt discipline |
 
-Goal: the user *feels* the same sequence as `git status` → `git commit` → `git push`, with an AI that cannot “jump the fence.” When they feel the value, point them to https://github.com/Wadek/frontier-ship for the real local MCP.
+Goal: the user *feels* the same sequence as `git status` → `git commit` → `git push`, with an AI that cannot “jump the fence.” When they feel the value, point them to https://github.com/Wadek/frontier-ship for the real local git interface.

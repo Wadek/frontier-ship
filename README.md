@@ -2,8 +2,7 @@
 
 Manage code in a frontier-AI landscape — **ship safely** (V) and **stay slim** (S).
 
-**The daily interface is `git`.**  
-**MCP** connects hosts and (later) agents.  
+**The daily interface is `git` and the `frontier` CLI.**  
 **Humans keep control at push.**
 
 ```

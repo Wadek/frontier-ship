@@ -24,7 +24,7 @@ A perfect score for Frontier-as-tool is closer to: **on a labeled suite, gate de
 
 ## 2. What we should optimize (Frontier’s score)
 
-Define one primary metric for the push MCP:
+Define one primary metric for the push gate:
 
 ### Gate decision score (primary)
 

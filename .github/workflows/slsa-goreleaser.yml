@@ -47,7 +47,6 @@ jobs:
           - cfg: frontier-git-darwin-arm64.yml
           - cfg: frontier-linux-amd64.yml
           - cfg: frontier-windows-amd64.yml
-          - cfg: frontier-mcp-linux-amd64.yml
     uses: slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@v2.1.0
     with:
       go-version-file: go.mod

@@ -27,7 +27,7 @@ Frontier’s own principles argue against it:
 | Need | Kernel rewrite? | Better place |
 |------|-----------------|--------------|
 | Evidence before push | No | Ledger + `git` shim / hooks |
-| Role ladder (Observer→Executor) | No | MCP + policy / logic rules |
+| Role ladder (Observer→Executor) | No | `frontier` CLI + policy / logic rules |
 | Stop source exfil to cloud models | No | Egress rules + prompt/tool policy |
 | Limit process FS/network | **Use existing** | Landlock, Seatbelt, seccomp, namespaces |
 | Stop always-approve god-mode | No | Agent permission modes + managed lock |
@@ -49,7 +49,7 @@ Frontier should do the same for AI: **compose**, don’t reimplement Unix.
   ├─────────────────────────────────────────────────────────┤
   │  L3  Universe language     axioms + Datalog/logic + V   │
   ├─────────────────────────────────────────────────────────┤
-  │  L2  Agent runtime         MCP, Grok modes, hooks       │
+  │  L2  Agent runtime         Grok modes, hooks, shell     │
   ├─────────────────────────────────────────────────────────┤
   │  L1  OS primitives (stock) Landlock/seccomp/NS/caps     │  ← use, don't fork
   ├─────────────────────────────────────────────────────────┤
@@ -91,7 +91,7 @@ If you want a banner later: **“Frontier on Unix”** beats **“we forked Linu
 ## Practical path (matches what you already built)
 
 ```
-  NOW     git interface + ledger + axioms + MCP trial     ✓
+  NOW     git interface + ledger + axioms + CLI           ✓
   NEXT    logic/ core + F5 triple ports
   THEN    run agent jobs under strict sandbox profiles
           (Grok --sandbox strict, Landlock, containers)

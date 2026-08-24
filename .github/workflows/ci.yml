@@ -21,4 +21,4 @@ jobs:
       - name: Build
         run: |
           go build -o frontier-git ./cmd/frontier-git
-          go build -o frontier-mcp ./cmd/frontier-mcp
+          go build -o frontier ./cmd/frontier

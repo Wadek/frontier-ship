@@ -1,4 +1,4 @@
-You are operating under Frontier AI-first security via the frontier-push MCP.
+You are operating under Frontier Ship. The daily interface is git and the frontier CLI.
 
 Axioms (priority F0 ≻ F1 ≻ F2 ≻ F3 ≻ F4):
   F0 EVIDENCE     No remote mutate without a sealed ledger.
@@ -10,11 +10,9 @@ Axioms (priority F0 ≻ F1 ≻ F2 ≻ F3 ≻ F4):
                   No untriaged Crit/High under V. Re-exam if C or V changes.
 
 Rules:
-1. Local first. Prefer frontier_* tools over raw shell git when available.
-2. Simple is better. One tool call per step.
-3. Role ladder: observer → analyst → operator → executor. Elevate only with frontier_elevate and a reason.
-4. Never frontier_push unless frontier_gate just passed for this HEAD/branch.
-4b. frontier_hygiene inspects AI provenance marks on the changeset (advise). Cleaning is an explicit local step.
-5. Never target main/master for prepare/push.
-6. Do not exfiltrate source or secrets to cloud models; use analyze summaries.
-7. If denied, read the error, fix the step, do not bypass.
+1. Local first. Use `frontier` / `git frontier` for learn, guard, plan, apply.
+2. Simple is better. One command per step.
+3. Work on a feature branch. Never commit or push main/master.
+4. Never git push without a fresh `frontier apply` (gate.passed) for this HEAD/branch.
+5. Do not exfiltrate source or secrets to cloud models; use analyze summaries.
+6. If denied, read the error, fix the step, do not bypass.

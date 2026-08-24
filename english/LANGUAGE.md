@@ -11,7 +11,7 @@ That is where laws and gates live as *truth*, not as framework fashion.
 
 ## For the machine you run today
 
-**Go** builds the local `git` shim and MCP. Boring on purpose.
+**Go** builds the local `git` shim and `frontier` CLI. Boring on purpose.
 
 ## For contributors
 
@@ -45,9 +45,9 @@ Git’s engine is C. That does **not** mean Frontier’s policy layer should be 
 
 | | **Go** (keep) | **C** |
 |--|----------------|--------|
-| Job | `git` shim, MCP, ledger I/O | Upstream `git/git`, kernels, tiny hooks |
+| Job | `git` shim, `frontier` CLI, ledger I/O | Upstream `git/git`, kernels, tiny hooks |
 | Safety | Memory-safe by default | Easy to violate F1 via bugs |
-| Size of *our* code | Small for JSON/MCP/strings | Same features ⇒ more lines, more review |
+| Size of *our* code | Small for JSON/CLI/strings | Same features ⇒ more lines, more review |
 | Proof story | Runtime only; laws in Haskell | C is not a better proof language than Haskell |
 | Reviewer tax | Lower | Higher (Linus-patience people hate vibe-C) |
 

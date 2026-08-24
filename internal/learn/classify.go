@@ -183,8 +183,8 @@ func inferKind(ls *Landscape) (kind, conf string, reasons []string) {
 		return "data_volume", "high", []string{"model/weight data volume, not an app repo"}
 	case name == "immich" && ls.HasCompose:
 		return "media_stack", "high", []string{"Immich compose project", "external photos stay outside this tree"}
-	case name == "mcp-web-skills":
-		return "skills_pack", "medium", []string{"MCP/skill registry style tree"}
+	case containsEntry(ls.TopEntries, "skills/") && !ls.HasCompose:
+		return "skills_pack", "medium", []string{"skill registry style tree"}
 	case name == "waka-net" || (name != "immich" && (containsEntry(ls.TopEntries, "gateway/") || containsEntry(ls.TopEntries, "vigil/"))):
 		reasons = []string{"network edge indicators (gateway/vigil/waka-net)"}
 		if ls.HasCompose {

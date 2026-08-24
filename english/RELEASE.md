@@ -19,7 +19,7 @@ Assets produced on a tag (examples):
 - `frontier-git-linux-amd64`
 - `frontier-git-windows-amd64`
 - `frontier-git-darwin-arm64`
-- `frontier-mcp-linux-amd64`
+- `frontier-linux-amd64` / `frontier-windows-amd64`
 - matching `*.intoto.jsonl` provenance files
 
 Alpha tags (`v0.1.0-alpha.1`) create a **prerelease**.
@@ -41,7 +41,7 @@ cd C:\Users\waka\src\frontier-ship
 # use real git for the tag push if the shim fights you:
 $env:FRONTIER_GIT_BIN = "C:\Program Files\Git\cmd\git.exe"
 
-git tag -a v0.1.0-alpha.1 -m "Frontier alpha: git shim + mcp with SLSA3 provenance"
+git tag -a v0.1.0-alpha.1 -m "Frontier alpha: git shim + CLI with SLSA3 provenance"
 git push origin v0.1.0-alpha.1
 ```
 
@@ -136,4 +136,4 @@ slsa-verifier verify-artifact ./frontier-git-linux-amd64 \
 
 - The SLSA Go builder is in maintenance mode; GitHub also pushes **artifact attestations**. For alpha, SLSA Go releaser matches what the GitHub UI offered you.
 - Private repos posting to public Rekor can leak the repo name; this project is **public**, so that is fine.
-- Minimality: we release only the two Go binaries people need (`frontier-git`, `frontier-mcp`), not a framework zoo.
+- Minimality: we release only the binaries people need (`frontier-git`, `frontier`), not a framework zoo.

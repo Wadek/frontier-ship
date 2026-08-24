@@ -995,7 +995,7 @@ PENT-DOMAIN-AD            engagement      record       needs confirm / not push-
 PENT-DOMAIN-NET           engagement      record       runtime/engagement
 PENT-DOMAIN-CLOUD         review          advise       often config/IaC later
 PENT-DOMAIN-LLM           changeset       advise       some patterns gateable later
-PENT-DOMAIN-MCP           changeset       advise       tool-abuse patterns later
+PENT-DOMAIN-AGENT         changeset       advise       tool-abuse patterns later
 ATTCK-TA0043              catalog         record       recon knowledge
 ATTCK-TA0001              engagement      record       initial access confirm
 ATTCK-TA0006              engagement      record       credential access

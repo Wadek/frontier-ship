@@ -33,15 +33,15 @@ Snapshot of the system as built. Simple English labels.
   |       | passthrough most verbs                           |
   |       | guard: commit-on-main, push                      |
   |       v                                                  |
-  |  internal/policy  role  ledger  gitx  egress  mcpstdio   |
+  |  internal/policy  role  ledger  gitx  egress             |
   |                                                          |
-  |  cmd/frontier-mcp  ----stdio---->  Claude/Cursor/Grok    |
+  |  cmd/frontier      ===== CLI =====>  humans and agents   |
   +------------+------------------------------+--------------+
                |                              |
-               | FRONTIER_GIT_BIN             | tools:
-               v                              |  whoami observe analyze
-  +------------------------+                  |  elevate prepare gate
-  | Real Git (vendor)      |                  |  push ledger
+               | FRONTIER_GIT_BIN             | commands:
+               v                              |  learn guard hygiene
+  +------------------------+                  |  plan apply push
+  | Real Git (vendor)      |                  |  ledger demo explain
   | Git for Windows / etc  |                  +----------^-----------+
   +------------------------+                             |
                |                                         |
@@ -91,10 +91,10 @@ Snapshot of the system as built. Simple English labels.
                       |
         +-------------v-------------+
         |     GO RUNTIME            |
-        |  git shim  |  frontier-mcp|
+        |  git shim  |  frontier CLI|
         +------+-----+------+-------+
                |            |
-          real git      AI hosts
+          real git      agents / shell
                |
           work tree
                |

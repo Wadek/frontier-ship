@@ -72,7 +72,7 @@ So:
 | Edge contribution | **Open** (Python, Rust, C, scripts, …) |
 | Human meaning | **English** (simple) |
 | Universal compute / proof | **Haskell** (for now) |
-| Local runner / git / MCP | **Go** (for now) |
+| Local runner / git / CLI | **Go** (for now) |
 
 Haskell is not a clubhouse. It is the **proof shelf**.  
 Go is not holy. It is the **tool that talks to git today**.

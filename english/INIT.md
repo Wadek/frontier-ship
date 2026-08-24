@@ -5,8 +5,7 @@ Read this in order. Simple English only here.
 ## What you are installing
 
 1. **Laws** (English + Haskell) — what is allowed  
-2. **`git`** (Go shim) — how you talk to the machine every day  
-3. **MCP** (Go) — how an AI host calls the same laws  
+2. **`git` + `frontier`** (Go) — how you talk to the machine every day  
 
 You do **not** install a new operating system.
 
@@ -39,7 +38,7 @@ If Frontier `git` is already on your PATH, and it blocks cloning quirks, use the
 
 ```text
 go build -o D:\frontier\bin\git.exe ./cmd/frontier-git
-go build -o D:\frontier\bin\frontier-mcp.exe ./cmd/frontier-mcp
+go build -o D:\frontier\bin\frontier.exe ./cmd/frontier
 ```
 
 Or:
@@ -109,10 +108,9 @@ If you have no GHC yet, skip this. The English + Go path still works. Install GH
 
 ---
 
-## Step 6 — Optional AI host (MCP)
+## Step 6 — Agents use the same CLI
 
-Point Claude / Cursor / Grok at `frontier-mcp` with `FRONTIER_REPO` set to your repo.  
-See `examples/mcp.claude.json`.
+Coding agents run `frontier` and `git` like a human. There is no separate host protocol.
 
 Corporate laptop with no install: paste `teach/CORPORATE_AI_TRIAL_PROMPT.md`.
 
