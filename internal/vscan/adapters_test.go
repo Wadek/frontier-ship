@@ -38,3 +38,17 @@ func TestParseTrivyJSON(t *testing.T) {
 		t.Fatalf("want 2 got %d meta=%v", len(fs), meta)
 	}
 }
+
+func TestAdapterSkipTestdata(t *testing.T) {
+	if !AdapterSkipPath("testdata/owasp/a06_pos/Dockerfile") {
+		t.Fatal("want skip testdata")
+	}
+	in := []Finding{
+		{Path: "testdata/owasp/a06_pos/Dockerfile", RuleID: "DS-0002"},
+		{Path: "cmd/frontier/main.go", RuleID: "keep"},
+	}
+	got := DropSkippedPaths(in)
+	if len(got) != 1 || got[0].RuleID != "keep" {
+		t.Fatalf("%+v", got)
+	}
+}

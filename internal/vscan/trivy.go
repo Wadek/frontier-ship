@@ -21,7 +21,8 @@ func (t TrivyScanner) Scan(root string) (Result, error) {
 	if !t.Available() {
 		return Result{Source: "trivy", Skipped: true, SkipWhy: "trivy not on PATH"}, nil
 	}
-	cmd := exec.Command("trivy", "fs", "--scanners", "vuln,misconfig,secret", "--format", "json", "--quiet", root)
+	cmd := exec.Command("trivy", "fs", "--scanners", "vuln,misconfig,secret",
+		"--skip-dirs", "testdata", "--format", "json", "--quiet", root)
 	cmd.Dir = root
 	out, err := cmd.Output()
 	if len(out) == 0 && err != nil {
@@ -31,6 +32,11 @@ func (t TrivyScanner) Scan(root string) (Result, error) {
 	if parseErr != nil {
 		return Result{Source: "trivy", Skipped: true, SkipWhy: parseErr.Error()}, nil
 	}
+	findings = DropSkippedPaths(findings)
+	if meta == nil {
+		meta = map[string]any{}
+	}
+	meta["count"] = len(findings)
 	return Result{Source: "trivy", Findings: findings, Meta: meta}, nil
 }
 

@@ -31,6 +31,11 @@ func (g GitleaksScanner) Scan(root string) (Result, error) {
 	if parseErr != nil {
 		return Result{Source: "gitleaks", Skipped: true, SkipWhy: parseErr.Error()}, nil
 	}
+	findings = DropSkippedPaths(findings)
+	if meta == nil {
+		meta = map[string]any{}
+	}
+	meta["count"] = len(findings)
 	return Result{Source: "gitleaks", Findings: findings, Meta: meta}, nil
 }
 

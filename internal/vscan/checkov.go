@@ -10,8 +10,8 @@ import (
 // CheckovScanner runs Checkov when installed (IaC misconfig - programmatic, no tokens).
 type CheckovScanner struct{}
 
-func (CheckovScanner) Name() string    { return "checkov" }
-func (CheckovScanner) Builtin() bool   { return false }
+func (CheckovScanner) Name() string  { return "checkov" }
+func (CheckovScanner) Builtin() bool { return false }
 func (CheckovScanner) Available() bool {
 	_, err := exec.LookPath("checkov")
 	return err == nil
@@ -36,6 +36,11 @@ func (c CheckovScanner) Scan(root string) (Result, error) {
 	if parseErr != nil {
 		return Result{Source: "checkov", Skipped: true, SkipWhy: parseErr.Error()}, nil
 	}
+	findings = DropSkippedPaths(findings)
+	if meta == nil {
+		meta = map[string]any{}
+	}
+	meta["count"] = len(findings)
 	return Result{Source: "checkov", Findings: findings, Meta: meta}, nil
 }
 
