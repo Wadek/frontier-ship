@@ -11,6 +11,7 @@ Optimize runs **after** Learn → Guard → Slim. It applies theoretical CS judg
   frontier scm …     # if customer has no VCS (separate command)
   frontier learn     # L — landscape
   frontier guard     # G — security
+  frontier hygiene   # H — AI provenance (watermarks-remover)
   frontier slim      # S — bloat (planned)
   frontier optimize  # O — speed (this family)
 ```

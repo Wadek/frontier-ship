@@ -64,3 +64,40 @@ func (r Repo) Push(remote, branch string) error {
 	return err
 }
 func (r Repo) RevParseHead() (string, error) { return r.run("rev-parse", "HEAD") }
+
+// ChangedPaths is the changeset Frontier examines: files different from
+// main/master (if present) plus unstaged and staged work. Deduped.
+func (r Repo) ChangedPaths() []string {
+	seen := map[string]struct{}{}
+	var out []string
+	add := func(blob string) {
+		for _, line := range strings.Split(blob, "\n") {
+			line = strings.TrimSpace(strings.Trim(line, "\""))
+			if line == "" {
+				continue
+			}
+			if _, ok := seen[line]; ok {
+				continue
+			}
+			seen[line] = struct{}{}
+			out = append(out, line)
+		}
+	}
+	base := "main"
+	if _, err := r.run("rev-parse", "--verify", "--quiet", "refs/heads/main"); err != nil {
+		if _, err2 := r.run("rev-parse", "--verify", "--quiet", "refs/heads/master"); err2 == nil {
+			base = "master"
+		} else {
+			base = ""
+		}
+	}
+	if base != "" {
+		names, _ := r.run("diff", "--name-only", "--diff-filter=ACMR", base+"...HEAD")
+		add(names)
+	}
+	unstaged, _ := r.run("diff", "--name-only", "--diff-filter=ACMR")
+	add(unstaged)
+	staged, _ := r.run("diff", "--cached", "--name-only", "--diff-filter=ACMR")
+	add(staged)
+	return out
+}

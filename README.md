@@ -24,11 +24,12 @@ Local first. Simple is better. Fail closed — like Terraform: **nothing goes if
 | **L** | **Learn** | Ingest + classify a project before change (first phase of Slim). |
 | **G** | **Guard** | Security (OWASP / secret surfaces / adapters). Examined at **changeset**. High/Critical → **block**. |
 | **S** | **Slim** | **Planned:** reduce vibe-code bloat. Advise first; optional block later. |
+| **H** | **Hygiene** | AI-provenance marks (Unicode / C2PA / metadata) via local watermarks-remover. Advise; optional clean (`frontier hygiene`). |
 | **O** | **Optimize** | Behavior-preserving speed; report in `.frontier/optimize` + small PRs (`frontier optimize`). |
 
 **Onboarding (not a letter family):** `frontier scm` — detect/init/connect version control when the customer has none ([english/SCM.md](english/SCM.md)).
 
-Order: **scm (if needed) → Learn → Guard → Slim → Optimize.**  
+Order: **scm (if needed) → Learn → Guard → Hygiene → Slim → Optimize.**  
 Prefer full words in scripts; letters are aliases. See [english/O_OPTIMIZE.md](english/O_OPTIMIZE.md).
 
 ---
@@ -87,6 +88,7 @@ frontier learn             # L — classify this project
 frontier guard             # G — security exam + secret surfaces
 frontier guard list        # scanners: owasp-v0, checkov, …
 frontier enhance guard     # programmatic pack + lean brief for host model
+frontier hygiene           # H — AI provenance inspect (watermarks-remover)
 frontier slim              # S — planned
 frontier optimize          # O — report (hotspots → Opt-*; pr-body for PRs)
 frontier mock-import       # mock importer
@@ -101,6 +103,7 @@ git frontier demo|ledger|status|explain
 | [english/INIT.md](english/INIT.md) | Start here |
 | [english/L_LEARN.md](english/L_LEARN.md) | Learn (L) |
 | [english/V_IMPLEMENTATION.md](english/V_IMPLEMENTATION.md) | Guard (G) |
+| [english/H_HYGIENE.md](english/H_HYGIENE.md) | Hygiene (H) — watermarks-remover |
 | [english/O_OPTIMIZE.md](english/O_OPTIMIZE.md) | Optimize (O) |
 | [english/O_VERIFY.md](english/O_VERIFY.md) | Optimize verification (tests + browser) |
 | [english/stacks/](english/stacks/) | Stack playbooks (Python/web, Go, Node, …) |

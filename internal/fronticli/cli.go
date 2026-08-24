@@ -3,6 +3,7 @@ package fronticli
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
@@ -10,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/Wadek/frontier-ship/internal/gitx"
+	"github.com/Wadek/frontier-ship/internal/hygiene"
 	"github.com/Wadek/frontier-ship/internal/learn"
 	"github.com/Wadek/frontier-ship/internal/ledger"
 	"github.com/Wadek/frontier-ship/internal/optimize"
@@ -33,7 +35,6 @@ var (
 //	FRONTIER_LEDGER    ledger path (optional; else .frontier/ledger.jsonl upward)
 //	FRONTIER_SOFT=1    warn instead of deny (learning mode)
 //	FRONTIER_STRICT=1  also require gate for `commit` always (optional hardness)
-
 
 // Version/Commit set via ldflags from cmd wrappers.
 var (
@@ -65,7 +66,6 @@ func FindRealGit() string { return findRealGit() }
 func RunGitPassthrough(git string, args []string) int {
 	return runPassthrough(git, args)
 }
-
 
 func guardPush(soft bool) error {
 	cwd, _ := os.Getwd()
@@ -171,6 +171,7 @@ func handleMeta(args []string) {
   -------------------   --------------
   frontier learn        L   — Learn / Landscape (classify before change)
   frontier guard        G   — Guard / security exam (OWASP + secret surfaces)
+  frontier hygiene      H   — Hygiene / AI provenance (watermarks-remover)
   frontier slim         S   — Slim / vibe-bloat (PLANNED — not enforced)
   frontier optimize     O   — Optimize report (behavior-preserving speed; advise)
 
@@ -178,6 +179,7 @@ func handleMeta(args []string) {
 
   git frontier learn classify [path]
   git frontier guard list|checkov
+  git frontier hygiene inspect|status|clean PATH
   git frontier optimize report|status|pr-body Opt-001
   git frontier enhance guard|optimize
   git frontier enhance status|seal
@@ -195,7 +197,7 @@ Env: FRONTIER_SOFT=1  FRONTIER_VERBOSE=1  FRONTIER_GIT_BIN  FRONTIER_LEDGER
 
 Nothing remote goes if plan/apply fails (like terraform).
 
-Same as standalone:  frontier scm | learn | guard | slim | optimize | plan | apply
+Same as standalone:  frontier scm | learn | guard | hygiene | slim | optimize | plan | apply
 (Not \"go frontier\" — go is the Go toolchain)`)
 		return
 	}
@@ -230,6 +232,8 @@ Same as standalone:  frontier scm | learn | guard | slim | optimize | plan | app
 		printSlimStub()
 	case "optimize", "O", "o":
 		runOptimize(cwd, args[1:])
+	case "hygiene", "watermarks", "watermark", "marks", "H", "h":
+		runHygiene(cwd, args[1:])
 	case "plan":
 		runPlan(cwd, true)
 	case "apply", "gate":
@@ -266,6 +270,7 @@ Onboarding:
 Policy families (word = primary, letter = alias):
   Learn     (L)  — ingest + classify before change
   Guard     (G)  — security + secret surfaces; enforced at changeset
+  Hygiene   (H)  — AI provenance (watermarks-remover); advise
   Slim      (S)  — vibe-code bloat; PLANNED
   Optimize  (O)  — behavior-preserving speed; report + small PRs
 
@@ -292,7 +297,7 @@ func printSlimStub() {
   First:   frontier learn classify   (learn before slim)
   After:   frontier optimize (O)     (speed without behavior change)
 
-  Stick with:  frontier learn | guard | plan | apply | push
+  Stick with:  frontier learn | guard | hygiene | plan | apply | push
 ╚══════════════════════════════════════════════╝`)
 }
 
@@ -313,6 +318,158 @@ func printOptimizeStub() {
 
   One Opt-ID per small PR. Advise-only — does not block gate.
 ╚══════════════════════════════════════════════╝`)
+}
+
+func printHygieneStub() {
+	fmt.Println(`╔══════════════════════════════════════════════╗
+║  Hygiene (H) — AI provenance marks           ║
+╚══════════════════════════════════════════════╝
+  Word:    frontier hygiene   aliases: watermarks, H
+  Service: watermarks-remover  http://127.0.0.1:8765
+  Docs:    english/H_HYGIENE.md
+
+  frontier hygiene              # inspect changeset (advise)
+  frontier hygiene inspect
+  frontier hygiene status       # health + capabilities
+  frontier hygiene clean PATH   # write PATH.cleaned.ext
+  frontier hygiene clean PATH --in-place
+
+  Default does not block plan/apply.
+  FRONTIER_HYGIENE_BLOCK=1  makes suspicious marks fail the gate.
+  WATERMARKS_SERVICE_URL    override (default loopback :8765)
+
+  Start service:
+    python D:\wakalabs\watermarks-remover\service\scripts\server.py --host 127.0.0.1 --port 8765
+╚══════════════════════════════════════════════╝`)
+}
+
+func runHygiene(cwd string, args []string) {
+	inPlace := false
+	var filtered []string
+	for _, a := range args {
+		switch strings.ToLower(a) {
+		case "--in-place", "-i":
+			inPlace = true
+		case "help", "-h", "--help":
+			printHygieneStub()
+			return
+		default:
+			filtered = append(filtered, a)
+		}
+	}
+	sub := "inspect"
+	rest := filtered
+	if len(filtered) > 0 {
+		switch strings.ToLower(filtered[0]) {
+		case "inspect", "status", "clean":
+			sub = strings.ToLower(filtered[0])
+			rest = filtered[1:]
+		}
+	}
+	switch sub {
+	case "status":
+		runHygieneStatus()
+	case "clean":
+		if len(rest) == 0 {
+			fail(fmt.Errorf("usage: frontier hygiene clean PATH [--in-place]"))
+			return
+		}
+		runHygieneClean(cwd, rest[0], inPlace)
+	default:
+		runHygieneInspect(cwd, rest, true)
+	}
+}
+
+func runHygieneStatus() {
+	fmt.Println(`╔══════════════════════════════════════════════╗
+║  HYGIENE (H) — service status                ║
+╚══════════════════════════════════════════════╝`)
+	base := hygiene.ServiceURL()
+	fmt.Printf("url: %s\n", base)
+	ver, err := hygiene.Health(base)
+	if err != nil {
+		fmt.Printf("healthy: no\nerror:   %s\n", err)
+		fmt.Println("start:   python D:\\wakalabs\\watermarks-remover\\service\\scripts\\server.py --host 127.0.0.1 --port 8765")
+		return
+	}
+	fmt.Printf("healthy: yes\nversion: %s\n", ver)
+	if caps, err := hygiene.Capabilities(base); err == nil && caps != nil {
+		b, _ := json.MarshalIndent(caps, "", "  ")
+		fmt.Println(string(b))
+	}
+}
+
+func hygieneTargets(cwd string, extra []string) []string {
+	if len(extra) > 0 {
+		return hygiene.ResolveTargets(cwd, extra)
+	}
+	repo := gitx.Repo{Dir: cwd}
+	return hygiene.ResolveTargets(cwd, repo.ChangedPaths())
+}
+
+func runHygieneInspect(cwd string, extra []string, seal bool) *hygiene.Report {
+	fmt.Println(`╔══════════════════════════════════════════════╗
+║  HYGIENE (H) — changeset inspect             ║
+╚══════════════════════════════════════════════╝`)
+	axiom("F0", "hygiene.start", "inspect AI provenance on the changeset")
+	targets := hygieneTargets(cwd, extra)
+	rep := hygiene.InspectFiles(hygiene.ServiceURL(), cwd, targets)
+	fmt.Print(hygiene.FormatReport(rep))
+	fmt.Println("╚══════════════════════════════════════════════╝")
+	if seal {
+		led, err := ledger.Open(findLedger(cwd))
+		if err == nil {
+			action := "hygiene.inspected"
+			if !rep.Healthy {
+				action = "hygiene.service_down"
+			}
+			_, _ = led.Append("frontier-git", action, map[string]any{
+				"healthy":     rep.Healthy,
+				"scanned":     rep.Scanned,
+				"suspicious":  rep.Suspicious,
+				"disposition": hygiene.Disposition(rep),
+				"service":     rep.Service,
+			})
+			axiom("F0", "ledger.append", action+" sealed")
+		}
+	}
+	return rep
+}
+
+func runHygieneClean(cwd, path string, inPlace bool) {
+	fmt.Println(`╔══════════════════════════════════════════════╗
+║  HYGIENE (H) — clean                         ║
+╚══════════════════════════════════════════════╝`)
+	axiom("F0", "hygiene.clean", "explicit strip; not silent on plan")
+	base := hygiene.ServiceURL()
+	if _, err := hygiene.Health(base); err != nil {
+		fail(fmt.Errorf("watermarks-remover down at %s: %w", base, err))
+		return
+	}
+	targets := hygiene.ResolveTargets(cwd, []string{path})
+	if len(targets) == 0 {
+		fail(fmt.Errorf("no hygiene-eligible file at %s", path))
+		return
+	}
+	abs := targets[0]
+	out, f, err := hygiene.CleanFile(base, abs, path, inPlace)
+	if err != nil {
+		fail(err)
+		return
+	}
+	fmt.Printf("wrote:  %s\nkind:   %s\nreport: %s\n", out, f.Kind, f.Report)
+	led, err := ledger.Open(findLedger(cwd))
+	if err == nil {
+		_, _ = led.Append("frontier-git", "hygiene.cleaned", map[string]any{
+			"src": path, "dst": out, "kind": f.Kind, "in_place": inPlace,
+		})
+		axiom("F0", "ledger.append", "hygiene.cleaned sealed")
+	}
+}
+
+func inspectHygieneQuiet(cwd string) *hygiene.Report {
+	targets := hygieneTargets(cwd, nil)
+	return hygiene.InspectFiles(hygiene.ServiceURL(), cwd, targets)
 }
 
 func runOptimize(cwd string, args []string) {
@@ -369,12 +526,12 @@ func runOptimizeReport(cwd string) {
 	}
 	ids := optimize.ListFindingIDs(r)
 	_, _ = led.Append("frontier-git", "optimize.reported", map[string]any{
-		"root":     r.Root,
-		"name":     r.Name,
-		"findings": len(r.Findings),
-		"ids":      ids,
-		"brief":    art.Markdown,
-		"json":     art.JSON,
+		"root":        r.Root,
+		"name":        r.Name,
+		"findings":    len(r.Findings),
+		"ids":         ids,
+		"brief":       art.Markdown,
+		"json":        art.JSON,
 		"blocks_gate": false,
 	})
 	axiom("F0", "ledger.append", "optimize.reported sealed")
@@ -517,14 +674,14 @@ func runLearnClassify(root string) {
 		return
 	}
 	_, _ = led.Append("frontier-git", "learn.classified", map[string]any{
-		"root":       ls.Root,
-		"name":       ls.Name,
-		"kind":       ls.Kind,
-		"confidence": ls.Confidence,
-		"has_git":    ls.HasGit,
+		"root":        ls.Root,
+		"name":        ls.Name,
+		"kind":        ls.Kind,
+		"confidence":  ls.Confidence,
+		"has_git":     ls.HasGit,
 		"has_compose": ls.HasCompose,
-		"brief":      art.Markdown,
-		"json":       art.JSON,
+		"brief":       art.Markdown,
+		"json":        art.JSON,
 	})
 	axiom("F0", "ledger.append", "learn.classified sealed")
 	axiom("F4", "learn.done", ls.Kind)
@@ -872,6 +1029,14 @@ func evaluateForShip(cwd string) (policy.GateResult, []owasp.Finding, error) {
 		g.OK = false
 		g.Reasons = append(g.Reasons, "OWASP V: untriaged High/Critical finding(s)")
 		axiom("F4", "exam.block", "High/Critical under V blocks ship")
+	}
+	hrep := inspectHygieneQuiet(cwd)
+	fmt.Printf("Hygiene (H): disposition=%s  scanned=%d  suspicious=%d  healthy=%v\n",
+		hygiene.Disposition(hrep), hrep.Scanned, hrep.Suspicious, hrep.Healthy)
+	if hygiene.BlocksGate(hrep) {
+		g.OK = false
+		g.Reasons = append(g.Reasons, "Hygiene H: untriaged provenance marks (FRONTIER_HYGIENE_BLOCK=1)")
+		axiom("F4", "hygiene.block", "operator asked Hygiene to fail closed")
 	}
 	if strings.EqualFold(b, "main") || strings.EqualFold(b, "master") {
 		axiom("F1", "harm.boundary", "refuse direct ship to main/master")

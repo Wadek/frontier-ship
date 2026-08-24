@@ -10,6 +10,7 @@ import (
 
 	"github.com/Wadek/frontier-ship/internal/egress"
 	"github.com/Wadek/frontier-ship/internal/gitx"
+	"github.com/Wadek/frontier-ship/internal/hygiene"
 	"github.com/Wadek/frontier-ship/internal/ledger"
 	"github.com/Wadek/frontier-ship/internal/mcpstdio"
 	"github.com/Wadek/frontier-ship/internal/policy"
@@ -57,6 +58,7 @@ func main() {
 			{Name: "frontier_whoami", Description: "Show current role, repo, and frontier principles. Cheap. Start here.", InputSchema: emptyObj},
 			{Name: "frontier_observe", Description: "Observer: git status, branch, recent log. No writes.", InputSchema: emptyObj},
 			{Name: "frontier_analyze", Description: "Analyst: diffstat + short advice (egress-safe summary). No writes.", InputSchema: emptyObj},
+			{Name: "frontier_hygiene", Description: "Analyst: inspect changeset for AI provenance marks (local watermarks-remover). Advise-only.", InputSchema: emptyObj},
 			{Name: "frontier_elevate", Description: "Elevate exactly one role rung (observer→analyst→operator→executor). Logged.", InputSchema: map[string]any{
 				"type": "object",
 				"properties": map[string]any{
@@ -116,6 +118,11 @@ func (st *state) dispatch(name string, args map[string]any) (string, error) {
 			return "", err
 		}
 		return st.analyze()
+	case "frontier_hygiene":
+		if err := policy.Require(st.role, role.Analyst, name); err != nil {
+			return "", err
+		}
+		return st.hygieneInspect()
 	case "frontier_elevate":
 		reason, _ := args["reason"].(string)
 		if strings.TrimSpace(reason) == "" {
@@ -187,6 +194,19 @@ func (st *state) observe() (string, error) {
 	})
 	return fmt.Sprintf("branch: %s\ndirty: %v\n\nstatus:\n%s\n\nrecent:\n%s\n",
 		branch, strings.TrimSpace(status) != "", status, log), nil
+}
+
+func (st *state) hygieneInspect() (string, error) {
+	rels := st.repo.ChangedPaths()
+	targets := hygiene.ResolveTargets(st.repo.Dir, rels)
+	rep := hygiene.InspectFiles(hygiene.ServiceURL(), st.repo.Dir, targets)
+	_, _ = st.led.Append(st.role.String(), "hygiene.inspected", map[string]any{
+		"healthy":     rep.Healthy,
+		"scanned":     rep.Scanned,
+		"suspicious":  rep.Suspicious,
+		"disposition": hygiene.Disposition(rep),
+	})
+	return hygiene.FormatReport(rep), nil
 }
 
 func (st *state) analyze() (string, error) {

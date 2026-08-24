@@ -1,6 +1,7 @@
 module Main where
 
 import Frontier.Gate
+import Frontier.Hygiene
 import Frontier.Laws
 import Frontier.Role
 import System.Exit (exitFailure, exitSuccess)
@@ -15,6 +16,8 @@ main = do
       ok5 = ok $ evaluatePushGate GateInput
               { branch = "frontier/x", headSha = "abc", dirty = False, allowDirty = False }
       ok6 = F0 `higherThan` F4
-  if and [ok1, ok2, ok3, ok4, ok5, ok6]
+      ok7 = hygieneDisposition True 1 False == HAdvise
+      ok8 = not $ blocksShip $ hygieneDisposition False 3 True
+  if and [ok1, ok2, ok3, ok4, ok5, ok6, ok7, ok8]
     then putStrLn "frontier-laws: ok" >> exitSuccess
     else putStrLn "frontier-laws: FAIL" >> exitFailure

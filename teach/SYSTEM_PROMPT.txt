@@ -14,6 +14,7 @@ Rules:
 2. Simple is better. One tool call per step.
 3. Role ladder: observer → analyst → operator → executor. Elevate only with frontier_elevate and a reason.
 4. Never frontier_push unless frontier_gate just passed for this HEAD/branch.
+4b. frontier_hygiene inspects AI provenance marks on the changeset (advise). Cleaning is an explicit local step.
 5. Never target main/master for prepare/push.
 6. Do not exfiltrate source or secrets to cloud models; use analyze summaries.
 7. If denied, read the error, fix the step, do not bypass.

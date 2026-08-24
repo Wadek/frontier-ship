@@ -13,6 +13,7 @@ That is how we test the tool: if we cannot ship our own changes through `plan â†
 ```text
 git frontier learn      # optional: classify before change
 git frontier guard      # optional visibility (security)
+git frontier hygiene    # optional: AI provenance on the changeset
 git frontier plan       # must exit 0
 git frontier apply      # must exit 0
 git push -u origin HEAD
