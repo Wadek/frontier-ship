@@ -10,10 +10,12 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/Wadek/frontier-ship/internal/catalog"
 	"github.com/Wadek/frontier-ship/internal/gitx"
 	"github.com/Wadek/frontier-ship/internal/hygiene"
 	"github.com/Wadek/frontier-ship/internal/learn"
 	"github.com/Wadek/frontier-ship/internal/ledger"
+	"github.com/Wadek/frontier-ship/internal/monitor"
 	"github.com/Wadek/frontier-ship/internal/optimize"
 	"github.com/Wadek/frontier-ship/internal/owasp"
 	"github.com/Wadek/frontier-ship/internal/policy"
@@ -178,12 +180,15 @@ func handleMeta(args []string) {
   frontier optimize     O   — Optimize report (behavior-preserving speed; advise)
 
   Onboarding (no letter):  frontier scm status|init|connect
+  Supervision (no letter): frontier monitor  — audit agent behavior vs directives
 
   git frontier learn classify [path]
   git frontier guard list|checkov
   git frontier hygiene inspect|status|clean PATH
   git frontier runtime status|scan|chaos|budget
   git frontier optimize report|status|pr-body Opt-001
+  git frontier monitor [all|status|directives]
+  git frontier skills|agents [list|show NAME]
   git frontier enhance guard|optimize
   git frontier enhance status|seal
   git frontier mock-import
@@ -239,6 +244,12 @@ Same as standalone:  frontier scm | learn | guard | hygiene | runtime | slim | o
 		runHygiene(cwd, args[1:])
 	case "runtime", "probe", "chaos", "R", "r":
 		runRuntime(cwd, args[1:])
+	case "monitor", "audit":
+		runMonitor(cwd, args[1:])
+	case "skills", "skill":
+		runSkills(args[1:])
+	case "agents", "agent":
+		runAgents(args[1:])
 	case "plan":
 		runPlan(cwd, true)
 	case "apply", "gate":
@@ -279,6 +290,7 @@ Policy families (word = primary, letter = alias):
   Runtime   (R)  — post-ship probe + bounded chaos (allowlist)
   Slim      (S)  — vibe-code bloat; PLANNED
   Optimize  (O)  — behavior-preserving speed; report + small PRs
+  Monitor        — audit ledgered agent behavior vs ship directives (frontier monitor)
 
 Enhance:
   frontier enhance guard | optimize
@@ -643,6 +655,188 @@ func runRuntimeBudget(cwd string) {
 		})
 		axiom("F0", "ledger.append", "runtime.tokens sealed")
 	}
+}
+
+func printMonitorStub() {
+	fmt.Println(`╔══════════════════════════════════════════════╗
+║  MONITOR — audit agent behavior vs directives ║
+╚══════════════════════════════════════════════╝
+  Purpose: examine ledgered agent behavior and verify the ship
+           directives (F0-F4, plan -> apply -> push, feature branches).
+  Evidence: every consequential action is sealed in the ledger (F0).
+  Docs: english/MONITOR.md
+
+  frontier monitor             # audit this repo's ledger
+  frontier monitor all         # audit every ledger under D:\frontier\ledgers
+  frontier monitor status      # recent monitor.* seals
+  frontier monitor directives  # print the D0-D7 reference set
+
+  Verdicts: clean | watch (denied attempts) | violation | tampered
+  Advise-only by default; FRONTIER_MONITOR_BLOCK=1 fails the run on
+  violation/tampered verdicts.
+
+  Watcher: scripts\frontier-monitor-watch.ps1  (event-driven; no poll)
+╚══════════════════════════════════════════════╝`)
+}
+
+func monitorBlock() bool {
+	v := os.Getenv("FRONTIER_MONITOR_BLOCK")
+	return v == "1" || strings.EqualFold(v, "true")
+}
+
+func printMonitorDirectives() {
+	fmt.Println(`╔══════════════════════════════════════════════╗
+║  MONITOR — directive reference (v0)           ║
+╚══════════════════════════════════════════════╝`)
+	for _, d := range monitor.Directives {
+		fmt.Printf("  %s  %s\n", d.ID, d.Text)
+	}
+	fmt.Println("╚══════════════════════════════════════════════╝")
+}
+
+func runMonitor(cwd string, args []string) {
+	sub := ""
+	if len(args) > 0 {
+		sub = strings.ToLower(args[0])
+	}
+	switch sub {
+	case "help", "-h", "--help":
+		printMonitorStub()
+		return
+	case "directives", "rules":
+		printMonitorDirectives()
+		return
+	case "status":
+		runMonitorStatus(cwd)
+		return
+	}
+	fmt.Println(`╔══════════════════════════════════════════════╗
+║  MONITOR — directive audit of ledger evidence ║
+╚══════════════════════════════════════════════╝`)
+	axiom("F0", "monitor.start", "examine ledgered agent behavior against ship directives")
+	var reps []*monitor.Report
+	var err error
+	if sub == "all" || sub == "sweep" {
+		reps, err = monitor.AuditAll(monitor.LedgersRoot())
+	} else {
+		var rep *monitor.Report
+		rep, err = monitor.AuditLedger(findLedger(cwd))
+		if rep != nil {
+			reps = []*monitor.Report{rep}
+		}
+	}
+	if err != nil {
+		fail(err)
+		return
+	}
+	if len(reps) == 0 {
+		fmt.Println("no ledgers found — run frontier plan/apply/push somewhere first")
+		reps = nil
+	}
+	rows, findings := 0, 0
+	for _, r := range reps {
+		rows += r.Rows
+		findings += len(r.Findings)
+		fmt.Println(monitor.FormatReport(r))
+		fmt.Println()
+	}
+	verdict := monitor.AggregateVerdict(reps)
+	led, err := ledger.Open(findLedger(cwd))
+	if err == nil {
+		_, _ = led.Append("frontier-git", "monitor.audited", map[string]any{
+			"verdict":    verdict,
+			"ledgers":    len(reps),
+			"rows":       rows,
+			"findings":   findings,
+			"blocks_gate": false,
+		})
+		axiom("F0", "ledger.append", "monitor.audited sealed")
+	}
+	axiom("F4", "monitor.done", verdict)
+	fmt.Printf("verdict: %s  (ledgers=%d rows=%d findings=%d)\n", verdict, len(reps), rows, findings)
+	if (verdict == "violation" || verdict == "tampered") && monitorBlock() {
+		fmt.Fprintln(os.Stderr, "FRONTIER_MONITOR_BLOCK=1 and verdict is "+verdict)
+		os.Exit(2)
+	}
+}
+
+func runMonitorStatus(cwd string) {
+	led, err := ledger.Open(findLedger(cwd))
+	if err != nil {
+		fail(err)
+		return
+	}
+	rows, _ := led.Tail(40)
+	n := 0
+	for _, r := range rows {
+		if strings.HasPrefix(r.Action, "monitor.") {
+			fmt.Printf("%d %s %s %v\n", r.Seq, r.TS, r.Action, r.Payload)
+			n++
+		}
+	}
+	if n == 0 {
+		fmt.Println("no monitor.* seals yet — run: frontier monitor")
+	}
+}
+
+func runSkills(args []string) { runCatalog("skills", catalog.SkillsDir(), args) }
+func runAgents(args []string) { runCatalog("agents", catalog.AgentsDir(), args) }
+
+func runCatalog(kind, root string, args []string) {
+	sub := "list"
+	name := ""
+	if len(args) > 0 {
+		switch strings.ToLower(args[0]) {
+		case "list", "ls", "":
+			if len(args) > 1 {
+				name = args[1]
+				sub = "show"
+			}
+		case "show", "cat":
+			sub = "show"
+			if len(args) > 1 {
+				name = args[1]
+			}
+		case "help", "-h", "--help":
+			fmt.Printf("usage: frontier %s [list|show <name>]\nroot: %s\n", kind, root)
+			return
+		default:
+			fmt.Fprintf(os.Stderr, "unknown %s subcommand %q (try: list | show <name>)\n", kind, args[0])
+			os.Exit(2)
+		}
+	}
+	if sub == "show" {
+		if name == "" {
+			fail(fmt.Errorf("usage: frontier %s show <name>", kind))
+			return
+		}
+		path, err := catalog.Show(root, name)
+		if err != nil {
+			fail(err)
+			return
+		}
+		if path == "" {
+			fail(fmt.Errorf("%s %q: no primary doc found", kind, name))
+			return
+		}
+		b, err := os.ReadFile(path)
+		if err != nil {
+			fail(err)
+			return
+		}
+		fmt.Println(string(b))
+		return
+	}
+	entries, err := catalog.List(root)
+	if err != nil {
+		fail(fmt.Errorf("%s root %s: %w (skills/agents live in the frontier-ship source tree)", kind, root, err))
+		return
+	}
+	fmt.Printf("%s (%d) — %s\n", strings.ToUpper(kind), len(entries), root)
+	for _, e := range entries {
+		fmt.Printf("  %-36s %s\n", e.Name, e.Title)
+	}
+	fmt.Printf("\nshow: frontier %s show <name>\n", kind)
 }
 
 func runOptimize(cwd string, args []string) {

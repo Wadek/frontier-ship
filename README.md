@@ -92,6 +92,8 @@ frontier hygiene           # H — AI provenance inspect (watermarks-remover)
 frontier runtime           # R — allowlisted probe + chaos dry-run
 frontier slim              # S — planned
 frontier optimize          # O — report (hotspots → Opt-*; pr-body for PRs)
+frontier monitor           # audit agent behavior vs ship directives (all|status|directives)
+frontier skills|agents     # wakalabs skills/agents imported into frontier-ship
 frontier mock-import       # mock importer
 git frontier demo|ledger|status|explain
 ```
@@ -106,6 +108,7 @@ git frontier demo|ledger|status|explain
 | [english/V_IMPLEMENTATION.md](english/V_IMPLEMENTATION.md) | Guard (G) |
 | [english/H_HYGIENE.md](english/H_HYGIENE.md) | Hygiene (H) — watermarks-remover |
 | [english/R_RUNTIME.md](english/R_RUNTIME.md) | Runtime (R) — probe + bounded chaos |
+| [english/MONITOR.md](english/MONITOR.md) | Monitor — audit agent behavior vs directives |
 | [english/O_OPTIMIZE.md](english/O_OPTIMIZE.md) | Optimize (O) |
 | [english/O_VERIFY.md](english/O_VERIFY.md) | Optimize verification (tests + browser) |
 | [english/stacks/](english/stacks/) | Stack playbooks (Python/web, Go, Node, …) |

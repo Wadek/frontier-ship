@@ -86,16 +86,7 @@ func (l *Ledger) Append(actor, action string, payload map[string]any) (*Entry, e
 		Payload:  payload,
 		PrevHash: prev,
 	}
-	canon, _ := json.Marshal(struct {
-		Seq      int64          `json:"seq"`
-		TS       string         `json:"ts"`
-		Actor    string         `json:"actor"`
-		Action   string         `json:"action"`
-		Payload  map[string]any `json:"payload"`
-		PrevHash string         `json:"prev_hash"`
-	}{e.Seq, e.TS, e.Actor, e.Action, e.Payload, e.PrevHash})
-	sum := sha256.Sum256(canon)
-	e.EntryHash = hex.EncodeToString(sum[:])
+	e.EntryHash = EntryHashOf(*e)
 
 	b, err := json.Marshal(e)
 	if err != nil {
@@ -147,6 +138,21 @@ func (l *Ledger) LastAction(action string) (*Entry, error) {
 		}
 	}
 	return nil, nil
+}
+
+// EntryHashOf returns the canonical SHA-256 evidence hash of one row.
+// Append uses the same canonicalization; monitors re-verify chains with it.
+func EntryHashOf(e Entry) string {
+	canon, _ := json.Marshal(struct {
+		Seq      int64          `json:"seq"`
+		TS       string         `json:"ts"`
+		Actor    string         `json:"actor"`
+		Action   string         `json:"action"`
+		Payload  map[string]any `json:"payload"`
+		PrevHash string         `json:"prev_hash"`
+	}{e.Seq, e.TS, e.Actor, e.Action, e.Payload, e.PrevHash})
+	sum := sha256.Sum256(canon)
+	return hex.EncodeToString(sum[:])
 }
 
 func (l *Ledger) tailMeta() (prev string, seq int64, err error) {

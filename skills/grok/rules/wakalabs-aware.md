@@ -1,0 +1,36 @@
+# Wakalabs aware (generated — do not edit by hand)
+
+- ts: 2026-09-14T06:47:29.947382+00:00
+- habitat: `D:\wakalabs`
+- gpu: NVIDIA GeForce RTX 2080 SUPER 7193MB free/8192MB
+- local logical model: `qwen2.5-coder:64k`
+- cascade files: 55023 (full 8908)
+- Do not poll. Local first. Ship via Frontier. Never merge main.
+- Do not move: `D:\immich-photos`, `D:\immich_backups`, `D:\waka-core`
+- Ship: frontier plan; frontier apply; git push (never --no-verify, never main)
+- Top cascade nodes:
+  - `.`
+  - `Hanne_Files`
+  - `Hanne_Files/100days`
+  - `Hanne_Files/1130`
+  - `Hanne_Files/April 25th`
+  - `Hanne_Files/Christmas`
+  - `Hanne_Files/ELA`
+  - `Hanne_Files/ELA/April ELA`
+  - `Hanne_Files/ELA/Dr Seuss`
+  - `Hanne_Files/ELA/GRAMMAR - conjuctions`
+  - `Hanne_Files/ELA/March ELA`
+  - `Hanne_Files/ELA/PREFIX SUFFIX`
+  - `Hanne_Files/ELA/Phonics`
+  - `Hanne_Files/ELA/Phonics -TH`
+  - `Hanne_Files/ELA/Saint Patty's Day`
+  - `Hanne_Files/ELA/Spelling LIST C2`
+  - `Hanne_Files/ELA/Spring Break`
+  - `Hanne_Files/Emma Grad Pics`
+  - `Hanne_Files/February Music`
+  - `Hanne_Files/Flashcards and manipulatives`
+  - `Hanne_Files/Grammar`
+  - `Hanne_Files/Halloween`
+  - `Hanne_Files/IXL`
+  - `Hanne_Files/IXL/IXL CERTIFICATES`
+- Full graph: `%USERPROFILE%\.waka-cli\aware\latest.json`

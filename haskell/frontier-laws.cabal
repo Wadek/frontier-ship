@@ -16,6 +16,7 @@ library
       Frontier.OWASP
       Frontier.Hygiene
       Frontier.Runtime
+      Frontier.Monitor
   hs-source-dirs:   src
   build-depends:    base >= 4.14 && < 5
   default-language: Haskell2010

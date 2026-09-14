@@ -29,7 +29,9 @@ type GateResult struct {
 	Extras    map[string]any `json:"extras,omitempty"`
 }
 
-const gateTTL = 15 * time.Minute
+// GateTTL is how long a plan.passed / gate.passed seal stays fresh for push.
+// Exported so the monitor can re-verify freshness from ledger timestamps.
+const GateTTL = 15 * time.Minute
 
 // DirtyPorcelain reports whether porcelain output has real changes,
 // ignoring Frontier's own ledger/metadata under .frontier/.
@@ -84,7 +86,7 @@ func SealGate(l *ledger.Ledger, actor string, g GateResult) (*GateResult, error)
 	action := "gate.failed"
 	if g.OK {
 		action = "gate.passed"
-		g.ExpiresAt = time.Now().UTC().Add(gateTTL).Format(time.RFC3339)
+		g.ExpiresAt = time.Now().UTC().Add(GateTTL).Format(time.RFC3339)
 	}
 	payload := map[string]any{
 		"ok":         g.OK,
@@ -137,7 +139,7 @@ func SealPlan(l *ledger.Ledger, actor string, g GateResult) (*GateResult, error)
 	action := "plan.failed"
 	if g.OK {
 		action = "plan.passed"
-		g.ExpiresAt = time.Now().UTC().Add(gateTTL).Format(time.RFC3339)
+		g.ExpiresAt = time.Now().UTC().Add(GateTTL).Format(time.RFC3339)
 	}
 	payload := map[string]any{
 		"ok":         g.OK,
